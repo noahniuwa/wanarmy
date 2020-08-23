@@ -56,9 +56,7 @@ function getRank (req, res) {
       const userAccount = accounts.find(account => account.a === address)
       if (userAccount) {
         const info = getUserInfo(userAccount.b)
-        if (info.rank === "General") userAccount.message = "Welcome comrade! Your rank is General!"
-        else if (info.rank === "Unranked") userAccount.message = `Welcome comrade! You are currently unranked. You are ${Math.round(info.nextRank - userAccount.b)} WAN away from the first rank (rounded to nearest whole number).`
-        else userAccount.message = `Welcome comrade! Your rank is ${info.rank}. You are currently ${Math.round(info.nextRank - userAccount.b)} WAN away from the next rank (rounded to nearest whole number).`
+        userAccount.rankInfo = info
         return res.send(userAccount)
       }
       return res.send({error: true, message: "Account not found"})
