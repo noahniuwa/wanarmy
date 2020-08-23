@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 const morgan = require('morgan')
 const fs = require('fs').promises
 const app = express()
-let port = process.env.PORT || 3007;
+let port = 1438;
 
 app.use(cors)
 app.use(bodyParser.json({ extended: false }));
@@ -142,5 +142,6 @@ function updateData () {
   .catch(err => console.log(err))
 }
 
+console.log(port)
 
 app.listen(port);
