@@ -2,9 +2,9 @@ const fetch = require('node-fetch')
 const express = require('express');
 const bodyParser = require('body-parser');
 const morgan = require('morgan')
-const fs = require('fs').promises
+const fs = require('fs')
 const app = express()
-let port = 1438;
+let port = 3017;
 
 app.use(cors)
 app.use(bodyParser.json({ extended: false }));
@@ -49,26 +49,24 @@ function getUserInfo(amount) {
 function getRank (req, res) {
   if (!req.body.address || req.body.address.length < 42) return res.send({error: true, message: "Account not found"})
   let address = req.body.address.toLowerCase()
-  fs.readFile('./balances.json')
-    .then(rawData => JSON.parse(rawData))
-    .then(accounts => {
-      console.log(accounts[0])
-      const userAccount = accounts.find(account => account.a === address)
-      if (userAccount) {
-        const info = getUserInfo(userAccount.b)
-        userAccount.rankInfo = info
-        return res.send(userAccount)
-      }
-      return res.send({error: true, message: "Account not found"})
-    })
-    .catch(err => res.send({error: true, message: "Account not found"}))
-  
+
+  fs.readFile('./balances.json', (err, data) => {
+    let accounts = JSON.parse(data)
+    const userAccount = accounts.find(account => account.a === address)
+    if (userAccount) {
+      const info = getUserInfo(userAccount.b)
+      userAccount.rankInfo = info
+      return res.send(userAccount)
+    }
+    return res.send({error: true, message: "Account not found"})
+  })  
 }
 
 function getData (req, res) {
-  fs.readFile('./currentData.json')
-    .then(rawData => JSON.parse(rawData))
-    .then(data => res.json(data))
+  fs.readFile('./currentData.json', (err, data) =>{
+    let json = JSON.parse(data)
+    res.json(json)
+  })    
 }
 
 function updateData () { 
@@ -103,7 +101,10 @@ function updateData () {
     return balances
   })
   .then(balances => JSON.stringify(balances))
-  .then(text => fs.writeFile('./originalBalances.json', text))
+  .then(text => fs.writeFile('./originalBalances.json', text, (err, data) => {
+    if (err) throw err;
+    console.log('The file has been saved!');
+  }))
   .then(() => {
     balances.forEach(balance => balance.b = convert(balance.b))
     stakes.forEach(validator => {
@@ -133,11 +134,17 @@ function updateData () {
   })
   .then(() => JSON.stringify(currentData))
   .then(text => {
-    fs.writeFile('./currentData.json', text)
+    fs.writeFile('./currentData.json', text, (err, data) => {
+      if (err) throw err;
+      console.log('The file has been saved!');
+    })
   })
   .then(() => JSON.stringify(balances))
   .then(text => {
-    fs.writeFile('./balances.json', text)
+    fs.writeFile('./balances.json', text, (err, data) => {
+      if (err) throw err;
+      console.log('The file has been saved!');
+    })
   })
   .catch(err => console.log(err))
 }
